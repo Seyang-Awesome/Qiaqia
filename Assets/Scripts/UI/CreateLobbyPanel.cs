@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +11,7 @@ public class CreateLobbyPanel : MonoBehaviour
     [SerializeField] private Button returnButton;
     [SerializeField] private TMP_InputField playerNameInputField;
     [SerializeField] private TMP_InputField lobbyNameInputField;
+    [SerializeField] private GameObject lobbyPanel;
 
     private void Start()
     {
@@ -17,31 +19,32 @@ public class CreateLobbyPanel : MonoBehaviour
         returnButton.onClick.AddListener(OnClickReturnButton);
     }
 
-    private void OnClickCreateLobbyButton()
+    private async void OnClickCreateLobbyButton()
     {
-        LocalInfo.connectType = ConnectType.ByHost;
-        LocalInfo.lobbyName = lobbyNameInputField.text == string.Empty 
+        LocalInfo.connectType = ConnectType.Host;
+        LocalInfo.lobbyName = lobbyNameInputField.text == string.Empty
             ? Consts.DefaultLobbyName 
             : lobbyNameInputField.text;
         LocalInfo.playerName = playerNameInputField.text == string.Empty
             ? Consts.DefaultPlayerName
             : playerNameInputField.text;
         
-        MessagePanel.Instance.Show(Consts.CreateLobbyMessage);
-        try
+        LoadingPanel.Instance.Show(Consts.CreateLobbyMessage);
+        UnityTransport transport = NetworkManager.Singleton.NetworkConfig.NetworkTransport as UnityTransport;
+        transport.SetConnectionData(NetworkTools.GetLocalIPAddress(), 7777);
+        bool result = await GlobalNetworkManager.Instance.StartHostAsync();
+        LoadingPanel.Instance.Hide();
+
+        if (result)
         {
-            NetworkManager.Singleton.StartHost();
-            LocalInfo.lobbyName = lobbyNameInputField.text;
-            
-            SceneLoader.Instance.NetworkLoadScene(Consts.LobbySceneName);
+            lobbyPanel.SetActive(true);
+            LobbyServerManager.Instance.CreateLobbyServerRpc(LocalInfo.lobbyName);
+            LobbyServerManager.Instance.EnterLobbyServerRpc(LocalInfo.GetPlayerNetworkInstance());
+            MessagePanel.Instance.ShowCorrectMessage(Consts.CreateLobbySuccessfullyMessage);
         }
-        catch (Exception e)
+        else
         {
-            Debug.LogError(e);
-        }
-        finally
-        {
-            MessagePanel.Instance.Hide();
+            MessagePanel.Instance.ShowErrorMessage(Consts.CreateLobbyFailedMessage);
         }
     }
     

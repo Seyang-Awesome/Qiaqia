@@ -8,5 +8,10 @@ public class LocalInfo
     public static ConnectType connectType;
     public static string lobbyName;
     public static string playerName;
+
+    public static PlayerNetworkInstance GetPlayerNetworkInstance()
+    {
+        return new PlayerNetworkInstance(connectType, playerName);
+    }
 }
 

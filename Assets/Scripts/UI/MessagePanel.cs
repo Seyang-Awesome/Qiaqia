@@ -1,37 +1,45 @@
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
 public class MessagePanel : MonoSingleton<MessagePanel>
 {
-    [SerializeField] private TextMeshProUGUI messageText;
+    [SerializeField] private TextMeshProUGUI tipText;
     protected override bool IsDontDestroyOnLoad => false;
+
+    public static Color correctColor = Color.green;
+    public static Color errorColor = Color.red;
+
+    private Vector2 originPos;
+    private Vector2 targetPos;
 
     private void Start()
     {
-        gameObject.SetActive(false);
+        originPos = transform.position;
+        targetPos = transform.position - new Vector3(0,((RectTransform)transform).rect.height) ;
     }
 
-    public void Show()
+    public void ShowCorrectMessage(string mes)
     {
-        gameObject.SetActive(true);
-    }
-    
-    public void Show(string message)
-    {
-        Show();
-        SetMessage(message);
+        tipText.color = correctColor;
+        ShowTip(mes);
     }
 
-    public void Hide()
+    public void ShowErrorMessage(string mes)
     {
-        gameObject.SetActive(false);
+        tipText.color = errorColor;
+        ShowTip(mes);
     }
 
-    public void SetMessage(string message)
+    public void ShowTip(string mes)
     {
-        messageText.text = message;
+        tipText.text = mes;
+        DOTween.Sequence()
+            .Append(transform.DOMove(targetPos, Consts.TipPanelMoveDuration))
+            .AppendInterval(Consts.TipPanelExistDuration)
+            .Append(transform.DOMove(originPos, Consts.TipPanelMoveDuration));
     }
 }
 

@@ -5,7 +5,13 @@ using UnityEngine;
 public enum ConnectType
 {
     None,
-    ByHost,
-    ByClient,
+    Host,
+    Client,
+}
+
+public enum ConnectState
+{
+    DisConnect,
+    Connect,
 }
 
